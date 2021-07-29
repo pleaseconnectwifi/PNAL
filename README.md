@@ -1,6 +1,6 @@
-# Learning with Noisy Labels for Robust Point Cloud Segmentation (iccv2021oral)
+# Learning with Noisy Labels for Robust Point Cloud Segmentation (ICCV2021 Oral)
 
-<img src='imgs/fig1.png'/>
+![](imgs/fig1.png)
 
 
 
@@ -17,7 +17,7 @@
 <sup>1</sup>City University of Hong Kong, <sup>2</sup>Microsoft Cloud AI,<sup>3</sup> University of California
 
 ## :star2: Pipeline
-<img src='imgs/pipeline.png'/>
+![](imgs/pipeline.png)
 
 ## :rocket: Code
 
