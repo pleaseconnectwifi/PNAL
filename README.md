@@ -4,7 +4,7 @@
 
 
 
-### [Project Page](https://shuquanye.com/PNAL_website/) | [Paper (ArXiv)]() | [Pre-trained Models]() | [Supplemental Material]()
+### [Project Page](https://shuquanye.com/PNAL_website/) | [Paper (ArXiv)](https://arxiv.org/abs/2107.14230) | [Pre-trained Models]() | [Supplemental Material]()
 
 
 
