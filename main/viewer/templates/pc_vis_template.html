@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{shape_id}</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" href="https://unpkg.com/bulmaswatch/flatly/bulmaswatch.min.css">
+		<style>
+			body {{
+				font-size: 1.0em;
+				line-height: 1.5;
+				color: whitesmoke;
+			}}
+			strong, table th {{
+				color: whitesmoke;
+			}}
+
+			.image {{
+				position: absolute;
+				display: flex;
+			}}
+
+			#canvas, #rightcanvas{{
+				width: 512px;
+				height: 512px;
+				border: 0px solid red;
+				float: left;
+			}}
+
+
+
+            #info {{
+                position: absolute;
+                top: 0px;
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                text-align: center;
+                -moz-user-select: none;
+                -webkit-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                pointer-events: none;
+                z-index: 1;
+            }}
+
+		</style>
+	</head>
+	<body>
+
+		<canvas id="canvas"></canvas>
+
+		<!-- <div id="info">
+<!--			Prediciton result of <strong>1127_ry45</strong> <br>-->
+			Input: blue. Prediction: pink. Label: green. <br>
+			A: Change input visibility. S: Change prediction visibility. D: Change label visibility.
+			<div>+/-: Increase/Decrease point size</div>
+
+		</div> -->
+		<script type="module">
+            import * as THREE from "https://cdn.jsdelivr.net/npm/three@v0.108.0/build/three.module.js";
+
+			import Stats from 'https://cdn.jsdelivr.net/npm/three@v0.108.0/examples/jsm/libs/stats.module.js';
+
+			import {{ PLYLoader }} from 'https://cdn.jsdelivr.net/npm/three@v0.108.0/examples/jsm/loaders/PLYLoader.js';
+
+			import {{TrackballControls}} from "https://cdn.jsdelivr.net/npm/three@v0.108.0/examples/jsm/controls/TrackballControls.js";
+
+			import {{ PCDLoader }} from 'https://cdn.jsdelivr.net/npm/three@v0.108.0/examples/jsm/loaders/PCDLoader.js';
+
+			var canvas, stats;
+
+			var camera, controls, cameraTarget, scene, renderer;
+			var input_pcd, pred_pcd, gt_pcd;
+			var pointsize = 0.005
+
+			init();
+			animate();
+
+			function set_canvas(canvas){{
+				canvas.height =  window.innerHeight;
+				canvas.width =  window.innerWidth;
+			}}
+
+			function init() {{
+				canvas = document.getElementById('canvas');
+				set_canvas(canvas);
+
+
+				camera = new THREE.PerspectiveCamera( 60, canvas.width / canvas.height, 0.1, 100.0 );
+				camera.position.set( 0, 0.5, 1.2 );
+
+				cameraTarget = new THREE.Vector3( 0, 0, 0 );
+
+				// camera.updateMatrixWorld(true); // manually update the matrix!
+				// console.log("1Camera moved matrix: ", camera.matrixWorld.elements.toString());
+				// var saveMatrix = new THREE.Matrix4();
+				// saveMatrix.set(0.16891676181734772,-0.18139020253675928,-0.9687955006092953,0,0.24172608993285125,0.9605251652631257,-0.13769496847023904,0,0.9555289765480254,-0.21092416011428955,0.20609554497165872,0,3.714073970230056,-0.8198473850612167,0.8010788973924376,1);
+				// camera.matrixWorld.copy(saveMatrix);
+				// camera.matrixWorldNeedsUpdate = true;
+				// camera.updateMatrixWorld(true); // manually update the matrix!
+				// console.log("2Camera moved matrix: ", camera.matrixWorld.elements.toString());
+
+				scene = new THREE.Scene();
+				// scene.background = new THREE.Color( 0x2E2D4D ); // dark blue
+				scene.background = new THREE.Color( 0xffffff ); // white
+
+				// PCD file
+                var loader1 = new PCDLoader();
+				loader1.load( '{input_fn}', function ( points ) {{
+					scene.add( points );
+					var points = scene.getObjectByName( 'input.pcd' );
+					input_pcd = points;
+					points.material.size = pointsize;
+                    points.material.needsUpdate = true;
+				}} );
+
+				loader1.load( '{pred_fn}', function ( points ) {{
+					scene.add( points );
+					var points = scene.getObjectByName( 'pred.pcd' );
+					pred_pcd = points;
+					points.material.size = pointsize;
+                    points.material.needsUpdate = true;
+				}} );
+
+				loader1.load( '{gt_fn}', function ( points ) {{
+					scene.add( points );
+					var points = scene.getObjectByName( 'gt.pcd' );
+					gt_pcd = points;
+					points.material.size = pointsize;
+                    points.material.needsUpdate = true;
+				}} );
+
+				// Lights
+				scene.add( new THREE.HemisphereLight( 0x555555, 0x111111 ) );
+
+				addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
+				// addShadowedLight( 0.5, 1, - 1, 0xffaa00, 1 );
+
+				// renderer
+				renderer = new THREE.WebGLRenderer( {{ antialias: true, canvas: canvas}} );
+				renderer.setSize( canvas.width, canvas.height );
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+				renderer.shadowMap.enabled = true;
+
+				// canvas.appendChild( renderer.domElement );
+
+				// stats
+				stats = new Stats();
+                stats.dom.style.cssText = 'position:fixed;bottom:0;right:0;cursor:pointer;opacity:0.9;z-index:10000';
+				canvas.appendChild( stats.dom );
+
+				// resize
+				window.addEventListener( 'resize', onWindowResize, false );
+                createControls(camera);
+
+				window.addEventListener( 'keypress', keyboard );
+				
+				// prepare to capture imgs
+				controls.enabled = false;
+				camera.autoUpdateMatrix = false; // turn off auto-update
+				var d = new THREE.Vector3(1.4610803763677174 , 0.624076502207446 , 0.8261030674922563),
+					q = new THREE.Quaternion(0.4199991204078325 , 0.4115668045231181 , 0.5854356716560895 , 0.5581026595742579),
+					s = new THREE.Vector3(1 , 1 , 1);
+				camera.position.copy( d );
+				camera.quaternion.copy( q );
+				camera.scale.copy( s );
+				camera.updateMatrixWorld(true); // manually update the matrix!
+
+				//takeScreenshot();
+
+			}}
+
+			function addShadowedLight( x, y, z, color, intensity ) {{
+
+				var directionalLight = new THREE.DirectionalLight( color, intensity );
+				directionalLight.position.set( x, y, z );
+				scene.add( directionalLight );
+
+				directionalLight.castShadow = true;
+
+				var d = 1;
+				directionalLight.shadow.camera.left = - d;
+				directionalLight.shadow.camera.right = d;
+				directionalLight.shadow.camera.top = d;
+				directionalLight.shadow.camera.bottom = - d;
+
+				directionalLight.shadow.camera.near = 1;
+				directionalLight.shadow.camera.far = 4;
+
+				directionalLight.shadow.mapSize.width = 1024;
+				directionalLight.shadow.mapSize.height = 1024;
+
+				directionalLight.shadow.bias = - 0.001;
+
+			}}
+
+			function onWindowResize() {{
+
+				var halfWidth = window.innerWidth / 2;
+				var height = window.innerHeight;
+
+				canvas.height = height;
+				canvas.width = halfWidth;
+
+				camera.aspect = canvas.width / canvas.height;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( canvas.width, canvas.height );
+                controls.handleResize();
+
+			}}
+
+			function animate() {{
+
+				requestAnimationFrame( animate );
+
+				switch (controls.enabled){{
+					case false:
+						render();
+						break;
+					case true:
+						controls.update();
+						stats.update();
+						render();
+						break;
+				}}
+
+			}}
+
+			function keyboard( ev ) {{
+
+				// var points = scene.getObjectByName( 'gt.pcd' );
+
+				switch ( ev.key || String.fromCharCode( ev.keyCode || ev.charCode ) ) {{
+
+					case '+':
+						input_pcd.material.size *= 1.2;
+						input_pcd.material.needsUpdate = true;
+						gt_pcd.material.size *= 1.2;
+						gt_pcd.material.needsUpdate = true;
+						pred_pcd.material.size *= 1.2;
+						pred_pcd.material.needsUpdate = true;
+						break;
+					case '-':
+						input_pcd.material.size /= 2.0;
+						input_pcd.material.needsUpdate = true;
+						gt_pcd.material.size /= 2.0;
+						gt_pcd.material.needsUpdate = true;
+						pred_pcd.material.size /= 2.0;
+						pred_pcd.material.needsUpdate = true;
+						break;
+					case 'a':
+						input_pcd.visible = !input_pcd.visible
+						break;
+					case 's':
+						pred_pcd.visible = !pred_pcd.visible
+						break;
+					case 'd':
+						gt_pcd.visible = !gt_pcd.visible
+						break;
+					case 'v':
+						controls.enabled = true;
+						var d = new THREE.Vector3(),
+							q = new THREE.Quaternion(),
+							s = new THREE.Vector3();
+						camera.matrixWorld.decompose( d, q, s );
+						// console.log("Camera moved matrix: ", camera.matrixWorld.elements.toString());
+						console.log("Camera moved matrix d: ", d.x,',',d.y,',',d.z);
+						console.log("Camera moved matrix q: ", q._x,',',q._y,',',q._z,',',q._w);
+						console.log("Camera moved matrix s: ", s.x,',',s.y,',',s.z);
+						// gt_pcd.matrixAutoUpdate = false;
+						// gt_pcd.updateMatrix(); 
+						// gt_pcd.updateMatrixWorld();
+						// console.log('Points position,scale,rotation',gt_pcd.matrix.elements.toString(),gt_pcd.position,gt_pcd.scale,gt_pcd.rotation);
+						// console.log("Camera moved matrix: ",camera.matrixWorld);
+						break;
+					case 'c':
+						controls.enabled = false;
+						camera.autoUpdateMatrix = false; // turn off auto-update
+						var d = new THREE.Vector3(0.9605163619911319, 0.6306974028830133, 0.5406002957453159),
+							q = new THREE.Quaternion(0.242383310257125, 0.4779090544062465, 0.7325339034568829, 0.41981823079941155),
+							s = new THREE.Vector3(1,1,1);
+						camera.position.copy( d );
+						camera.quaternion.copy( q );
+						camera.scale.copy( s );
+						camera.updateMatrixWorld(true); // manually update the matrix!
+						camera.matrixWorld.decompose( d, q, s );
+						console.log("Camera moved matrix d,q,s: ", d,q,s);
+						break;
+				}}
+
+			}}
+
+            function createControls( camera ) {{
+
+				controls = new TrackballControls( camera, renderer.domElement );
+
+				controls.rotateSpeed = 1.0;
+				controls.zoomSpeed = 1.2;
+				controls.panSpeed = 0.8;
+
+				controls.keys = [ 65, 83, 68 ];
+
+			}}
+
+			function render() {{
+				renderer.render( scene, camera );
+			}}
+
+			function takeScreenshot(ev) {{
+				// For screenshots to work with WebGL renderer, preserveDrawingBuffer should be set to true.
+				// open in new window like this
+				var w = window.open('', '');
+				w.document.title = "Screenshot";
+				//w.document.body.style.backgroundColor = "red";
+				// prepare to capture imgs
+				input_pcd.visible = false;
+				pred_pcd.visible = false;
+				var img = new Image();
+				img.src = renderer.domElement.toDataURL();
+				w.document.body.appendChild(img);
+
+				// download file like this.
+				var a = document.createElement('a');
+				a.href = renderer.domElement.toDataURL().replace("image/png", "image/octet-stream");
+				a.download = 'canvas.png'
+				a.click();
+			}}
+
+		</script>
+	</body>
+</html>
+

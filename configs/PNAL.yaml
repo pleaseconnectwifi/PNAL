@@ -1,0 +1,44 @@
+DATA:
+  EXP_NAME: NL_60sym_DGCNN
+  WHICH_GPU: 0
+  PC:
+    TRAIN:
+      INPUT_DIR: "NL_S3DIS/per60_0.018_DBSCANCluster/"
+
+    VAL:
+      INPUT_DIR: "NL_S3DIS/per60_0.018_DBSCANCluster/"
+
+    TEST:
+      INPUT_DIR: "NL_S3DIS/per60_0.018_DBSCANCluster/"
+
+  NUM_WORKERS: 4
+  NOISE_RATE: 0.0 # whatever we dont need it
+  SHUFFLE: 1
+  THRESHOLD: 0.001 
+  THRESHOLD_VOTING: 5
+  NET: "DGCNN"
+  DATASET: "S3DIS"
+  WARM_UP: 4
+  EMA: 1
+  EMA_DECAY: 0.999
+MODEL:
+  EDGE_CHANNELS: (32, 32, 64)
+  LOSS_FUNCTION: ""
+SCHEDULER:
+  TYPE: "StepLR"
+  MAX_EPOCH: 30
+  StepLR:
+    gamma: 0.9
+    step_size: 5
+SOLVER:
+  TYPE: "Adam"
+  BASE_LR: 0.001
+TRAIN:
+  BATCH_SIZE: 12
+  CHECKPOINT_PERIOD: 2
+  LOG_PERIOD: 1
+  VAL_METRIC: OA
+TEST:
+  BATCH_SIZE: 1
+  WEIGHT: ""
+  LOG_PERIOD: 1
