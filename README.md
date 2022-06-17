@@ -63,23 +63,23 @@ Move it to `NL_S3DIS/` and unzip.
 
 ### :walking: Make noisy and cluster data on your own? 
 
-TODO
+download and unzip [data_raw.zip]([data_raw.zip](https://portland-my.sharepoint.com/:u:/g/personal/shuquanye2-c_my_cityu_edu_hk/EZ4cjxsVP-5IhMfW6tV2mmgBxdpGpwS2zHDRxOA0jYvrtw?e=4p27e7)), the clean data and based on this we make noise.
 
-~~download and unzip data_raw.zip, the clean data and based on this we make noise.~~
-
-~~e.g. create 60% symmetric noise:~~
+e.g., create 80% symmetric noise:
 
 ```
-​```python make_NL_S3DIS.py --noiserate_percent 60 --alpha 0.85 --root data_with_ins_label```
+python make_NL_S3DIS.py --training --replace_method 1 --pre_cluster_path 'per60_0.018_DBSCANCluster/' --precent_NL 80 --root 'data_with_ins_label'
 ```
 
-~~You can further switch cluster methods and noise types in S3DIS_instance.~~
+The label noise type can be switched by replace_method (=1 for Symmetry, =2 for Asymmetry, =3 for common Asymmetry), and the noise rate by precent_NL.
 
-~~download ply_data_all_h5, the raw S3DIS dataset.~~
+You can further switch cluster methods, e.g., ByPartitionMethods, ByDBSCAN, and ByGMM, in S3DIS_instance.
 
-~~move it to NL_S3DIS/raw and unzip.~~
+download [ply_data_all_h5](https://portland-my.sharepoint.com/:u:/g/personal/shuquanye2-c_my_cityu_edu_hk/EYMg_WLVkORIkYdd_2lFCKgBxbyBwhbGzoMiJG7h2iolcw?e=wc1kDc), the raw S3DIS dataset.
 
-~~done.~~
+move it to NL_S3DIS/raw and unzip.
+
+done.
 
 
 ### :punch: How can I check the noise rate?
