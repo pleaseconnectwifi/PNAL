@@ -125,4 +125,4 @@ you can run with common Cross Entropy (CE) loss or Generalized Cross Entropy (GC
 
 :smile_cat: We thank a lot for the flexible codebase of [SELFIE](https://github.com/kaist-dmlab/SELFIE/blob/master/SELFIE/algorithm/selfie.py), [pytorch_geometric](https://github.com/rusty1s/pytorch_geometric/blob/master/examples/dgcnn_segmentation.py), [Truncated-Loss](https://github.com/AlanChou/Truncated-Loss/blob/master/TruncatedLoss.py).
 
-:kissing_cat: I would like to give my particular thanks to [Jiaying Lin](https://jiaying.link/), my special friend, for his constructive suggestions, generous support to this project, as well as the tremendous love given to me~
+:smile_cat: I would like to thank [Jiaying Lin](https://jiaying.link/) for providing the initial idea, constructive suggestions, generous support to this project.
